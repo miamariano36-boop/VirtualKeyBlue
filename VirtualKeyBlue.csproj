@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>VirtualKeyBlue</AssemblyName>
+    <RootNamespace>VirtualKeyBlue</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="StardewModdingAPI">
+      <HintPath>libs/StardewModdingAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Stardew Valley">
+      <HintPath>libs/StardewValley.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="xTile">
+      <HintPath>libs/xTile.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
