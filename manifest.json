@@ -1,0 +1,9 @@
+{
+  "Name": "VirtualKeyBlue",
+  "Author": "blackroseblue100",
+  "Version": "1.0.0",
+  "Description": "Teclado virtual en español con guardado automático.",
+  "UniqueID": "blackroseblue100.VirtualKeyBlue",
+  "EntryDll": "VirtualKeyBlue.dll",
+  "MinimumApiVersion": "3.0.0"
+}
