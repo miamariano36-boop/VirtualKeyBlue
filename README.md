@@ -1,38 +1,170 @@
-# VirtualKeyBlue
+using System;
+using System.Collections.Generic;
+using StardewModdingAPI;
+using StardewValley;
 
-Mod base para teclado virtual en español para Stardew Valley.
+namespace VirtualKeyBlue
+{
+    public class ModEntry : Mod
+    {
+        private VirtualKeyboardMenu? _keyboardMenu;
+        private ModConfig _config = new();
 
-## Estructura
-- manifest.json
-- ModEntry.cs
-- VirtualKeyboardMenu.cs
-- assets/ (svg/png opcionales)
+        public override void Entry(IModHelper helper)
+        {
+            try
+            {
+                _config = helper.ReadConfig<ModConfig>() ?? new ModConfig();
+            }
+            catch (Exception)
+            {
+                _config = new ModConfig();
+            }
 
-## Compilar
-1. Crea un proyecto de tipo Class Library en C# (por ejemplo en Visual Studio).
-2. Añade estos archivos al proyecto (`ModEntry.cs`, `VirtualKeyboardMenu.cs`).
-3. Añade referencias a:
-   - StardewValley.dll
-   - StardewModdingAPI.dll
-   - xTile.dll
-   - Microsoft.Xna.Framework.dll
-   - Microsoft.Xna.Framework.Graphics.dll
-4. Compila.
-5. Copia el .dll generado a la carpeta del mod (`VirtualKeyBlue.dll`).
-6. Crea la carpeta dentro de `Mods/`:
-   - `Mods/VirtualKeyBlue/`
-7. Coloca en esa carpeta:
-   - `manifest.json`
-   - `VirtualKeyBlue.dll`
-   - `config.json` (se generará automáticamente la primera vez si no existe)
+            if (_config.KeyboardRows == null || _config.KeyboardRows.Count == 0)
+            {
+                _config.KeyboardRows = DefaultSpanishLayout();
+                helper.WriteConfig(_config);
+            }
 
-## Uso
-- Presiona A para abrir/cerrar.
-- Comandos en consola (SMAPI):
-  - `vk` / `vkopen` / `vkclose`
-  - `vkaddkey 2 ñ` — añade la tecla ñ a la fila 2 y la guarda
-  - `vkaddrow á é í ó ú` — añade una fila nueva y la guarda
-  - `vksave` — guarda manualmente
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
 
-## Configuración
-La primera vez que se ejecuta el mod, crea un archivo `config.json` con el diseño español por defecto.
+            helper.ConsoleCommands.Add("vk", "Abre o cierra el teclado virtual", (_, _) => ToggleKeyboard());
+            helper.ConsoleCommands.Add("vkopen", "Abre el teclado virtual", (_, _) => OpenKeyboard());
+            helper.ConsoleCommands.Add("vkclose", "Cierra el teclado virtual", (_, _) => CloseKeyboard());
+
+            helper.ConsoleCommands.Add(
+                "vkaddkey",
+                "Uso: vkaddkey <fila(1-based)> <tecla> — añade una tecla y la guarda.",
+                (cmd, args) =>
+                {
+                    if (args.Length < 2)
+                    {
+                        Monitor.Log("Uso: vkaddkey <fila(1-based)> <tecla>", LogLevel.Info);
+                        return;
+                    }
+
+                    if (!int.TryParse(args[0], out int rowNumber))
+                    {
+                        Monitor.Log("La primera parte debe ser un número de fila.", LogLevel.Info);
+                        return;
+                    }
+
+                    if (rowNumber < 1 || rowNumber > _config.KeyboardRows.Count)
+                    {
+                        Monitor.Log("Fila fuera de rango.", LogLevel.Warn);
+                        return;
+                    }
+
+                    string key = args[1];
+                    _config.KeyboardRows[rowNumber - 1].Add(key);
+                    SaveConfig();
+
+                    if (Game1.activeClickableMenu is VirtualKeyboardMenu menu)
+                    {
+                        menu.AddKeyToRow(rowNumber - 1, key);
+                        Monitor.Log($"Tecla '{key}' añadida a la fila {rowNumber}.", LogLevel.Info);
+                    }
+                    else
+                    {
+                        Monitor.Log($"Tecla '{key}' añadida a la configuración.", LogLevel.Info);
+                    }
+                });
+
+            helper.ConsoleCommands.Add(
+                "vkaddrow",
+                "Uso: vkaddrow <tecla1> <tecla2> ... — añade una nueva fila y la guarda.",
+                (cmd, args) =>
+                {
+                    if (args.Length < 1)
+                    {
+                        Monitor.Log("Uso: vkaddrow <tecla1> <tecla2> ...", LogLevel.Info);
+                        return;
+                    }
+
+                    _config.KeyboardRows.Add(new List<string>(args));
+                    SaveConfig();
+
+                    if (Game1.activeClickableMenu is VirtualKeyboardMenu menu)
+                    {
+                        menu.AddRow(new List<string>(args));
+                        Monitor.Log("Nueva fila añadida al teclado.", LogLevel.Info);
+                    }
+                    else
+                    {
+                        Monitor.Log("Nueva fila añadida a la configuración.", LogLevel.Info);
+                    }
+                });
+
+            helper.ConsoleCommands.Add(
+                "vksave",
+                "Guarda la configuración actual del teclado.",
+                (_, _) => SaveConfig()
+            );
+        }
+
+        private void OnButtonPressed(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (e.Button == SButton.A)
+            {
+                ToggleKeyboard();
+            }
+        }
+
+        public void OpenKeyboard()
+        {
+            if (Game1.activeClickableMenu is VirtualKeyboardMenu)
+                return;
+
+            _keyboardMenu = new VirtualKeyboardMenu(Monitor, _config.KeyboardRows);
+            Game1.activeClickableMenu = _keyboardMenu;
+        }
+
+        public void CloseKeyboard()
+        {
+            if (Game1.activeClickableMenu is VirtualKeyboardMenu)
+            {
+                Game1.exitActiveMenu();
+                _keyboardMenu = null;
+            }
+        }
+
+        public void ToggleKeyboard()
+        {
+            if (Game1.activeClickableMenu is VirtualKeyboardMenu)
+                CloseKeyboard();
+            else
+                OpenKeyboard();
+        }
+
+        private void SaveConfig()
+        {
+            try
+            {
+                Helper.WriteConfig(_config);
+                Monitor.Log("Configuración guardada en config.json", LogLevel.Info);
+            }
+            catch (Exception ex)
+            {
+                Monitor.Log("Error al guardar config.json: " + ex.Message, LogLevel.Error);
+            }
+        }
+
+        private static List<List<string>> DefaultSpanishLayout()
+        {
+            return new List<List<string>>
+            {
+                new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "Backspace" },
+                new List<string> { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "Ñ" },
+                new List<string> { "A", "S", "D", "F", "G", "H", "J", "K", "L", "Á", "É", "Enter" },
+                new List<string> { "Z", "X", "C", "V", "B", "N", "M", "Í", "Ó", "Ú", "Ü", "Shift" },
+                new List<string> { "¿", "¡", "-", "_", "Space" }
+            };
+        }
+    }
+
+    public class ModConfig
+    {
+        public List<List<string>> KeyboardRows { get; set; } = new List<List<string>>();
+    }
+}

@@ -1,6 +1,43 @@
-{
-  "KeyboardRows": [
-    ["1","2","3","4","5","6","7","8","9","0","Backspace"],
-    ["Q","W","E","R","T","Y","U","I","O","P","Ñ"],
-    ["A","S","D","F","G","H","J","K","L","Enter"],
-    ["Z","X","C","V","B","N","M",",",
+# VirtualKeyBlue
+
+Mod base para teclado virtual en español para Stardew Valley.
+
+## Características
+- Apertura con la tecla A
+- Diseño español por defecto
+- Configuración guardada automáticamente en `config.json`
+- Soporta más símbolos del español (`á`, `é`, `í`, `ó`, `ú`, `ü`, `¿`, `¡`)
+- Comandos extra para añadir teclas y filas en tiempo real
+
+## Estructura
+- manifest.json
+- ModEntry.cs
+- VirtualKeyboardMenu.cs
+- assets/ (SVGs de ejemplo)
+
+## Compilar
+1. Crea un proyecto de tipo Class Library en C#.
+2. Añade estos archivos al proyecto (`ModEntry.cs`, `VirtualKeyboardMenu.cs`).
+3. Añade referencias a:
+   - StardewValley.dll
+   - StardewModdingAPI.dll
+   - xTile.dll
+   - Microsoft.Xna.Framework.dll
+   - Microsoft.Xna.Framework.Graphics.dll
+4. Compila.
+5. Copia el `.dll` generado a `Mods/VirtualKeyBlue/`.
+6. Guarda en esa carpeta:
+   - `manifest.json`
+   - `VirtualKeyBlue.dll`
+   - `config.json` (si no existe, se crea al arrancar)
+
+## Uso
+- Presiona `A` para abrir/cerrar.
+- Console commands de SMAPI:
+  - `vk` / `vkopen` / `vkclose`
+  - `vkaddkey 2 ñ` — añade la tecla ñ a la fila 2 y la guarda
+  - `vkaddrow á é í ó ú` — añade una fila nueva con símbolos
+  - `vksave` — guarda manualmente
+
+## Configuración
+La primera vez que se ejecuta el mod, crea un archivo `config.json` con un layout más completo en español.
